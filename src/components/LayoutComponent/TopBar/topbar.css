@@ -1,0 +1,12 @@
+.menuSpace {
+  min-height: 70px;
+}
+
+.fixedMenu {
+  position: fixed;
+  top: 0px;
+  height: 70px;
+  width: 100%;
+  left: 0px;
+  z-index: 10000000;
+}

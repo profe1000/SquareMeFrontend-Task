@@ -1,0 +1,15 @@
+.safeAreaBottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.bottomBar {
+  position: fixed;
+  bottom: 0px;
+  height: 80px;
+  width: 100%;
+  left: 0px;
+}
+
+.tabBarSpace {
+  height: 80px;
+}
