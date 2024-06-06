@@ -1,7 +1,7 @@
 import { LoadingOutlined, MailOutlined } from "@ant-design/icons";
 import { notification } from "antd";
 import { Link, useNavigate } from "react-router-dom";
-import { authSignIn, sampleApiCall } from "../../../apiservice/authService";
+import { authSignIn } from "../../../apiservice/authService";
 import { IAuthType } from "../../../apiservice/authService.type";
 import CustomInput from "../../../components/Sharedcomponents/InputBtn/Input-Field";
 import PasswordInput from "../../../components/Sharedcomponents/PasswordBtn/Password-input";
@@ -51,7 +51,7 @@ const UserSignin = () => {
 
   // Custom hook to format the API call
   const result = useFormatApiRequest(
-    () => sampleApiCall(formik.values),
+    () => authSignIn(formik.values),
     loadApi,
     () => {
       setLoadApi(false);

@@ -1,7 +1,6 @@
 import { LoadingOutlined } from "@ant-design/icons";
 import { notification } from "antd";
 import { useState } from "react";
-import { sampleApiCall } from "../../apiservice/authService";
 import useFormatApiRequest from "../../hooks/formatApiRequest";
 import { useAppDispatch } from "../../Redux/reduxCustomHook";
 import { NotificationType } from "../../utils/mscType.type";
@@ -10,11 +9,13 @@ import CustomInputLink from "../Sharedcomponents/InputBtn/Input-Field-url";
 import "./Dashboard-Comp.css";
 import { useFormik } from "formik";
 import * as yup from "yup";
+import { addUrl } from "../../apiservice/dashboardService";
 
 const DashboardForm = () => {
   const [formLoading, setFormLoading] = useState<boolean>(false);
   const [loadApi, setLoadApi] = useState(false);
   const [api, contextHolder] = notification.useNotification();
+  const [payload, setPayLoad] = useState<any>({});
   const dispatch = useAppDispatch();
 
   // Validation schema
@@ -45,16 +46,15 @@ const DashboardForm = () => {
             ? values.websiteUrl
             : `https://${values.websiteUrl}`,
       };
+      setPayLoad(formattedValues);
       setLoadApi(true);
       setFormLoading(true);
-      // Make the API call with the formatted values
-      sampleApiCall(formattedValues);
     },
   });
 
   // Custom hook to format the API call
   const result = useFormatApiRequest(
-    () => sampleApiCall(formik.values),
+    () => addUrl(payload),
     loadApi,
     () => {
       setLoadApi(false);

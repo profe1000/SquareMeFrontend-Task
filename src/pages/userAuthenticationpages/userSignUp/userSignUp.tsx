@@ -2,7 +2,7 @@ import { LoadingOutlined, MailOutlined } from "@ant-design/icons";
 import { notification } from "antd";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { authSignUp, sampleApiCall } from "../../../apiservice/authService";
+import { authSignUp } from "../../../apiservice/authService";
 import { useFormik } from "formik";
 import * as yup from "yup";
 import CustomInput from "../../../components/Sharedcomponents/InputBtn/Input-Field";
@@ -30,7 +30,7 @@ const UserSignUp = () => {
       ),
     confirmPassword: yup
       .string()
-      .oneOf([yup.ref("password"),], "Passwords must match")
+      .oneOf([yup.ref("password")], "Passwords must match")
       .required("Confirm Password is required"),
   });
 
@@ -50,7 +50,7 @@ const UserSignUp = () => {
 
   // A custom hook to format the signup API call
   const result = useFormatApiRequest(
-    () => sampleApiCall(formik.values),
+    () => authSignUp(formik.values),
     loadApi,
     () => {
       setLoadApi(false);

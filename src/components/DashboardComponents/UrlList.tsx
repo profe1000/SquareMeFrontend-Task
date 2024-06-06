@@ -2,14 +2,13 @@ import { ArrowLeftOutlined, ArrowRightOutlined } from "@ant-design/icons";
 import { Button, Modal, notification, Pagination, Result } from "antd";
 import Table, { ColumnsType } from "antd/es/table";
 import { useEffect, useState } from "react";
-import { sampleApiCall } from "../../apiservice/authService";
+import { getUrl } from "../../apiservice/dashboardService";
 import { IURLData } from "../../apiservice/dashboardService.type ";
 import useFormatApiRequest from "../../hooks/formatApiRequest";
 import { useAppDispatch, useAppSelector } from "../../Redux/reduxCustomHook";
 import { RootState } from "../../Redux/store";
 import { appZIndex } from "../../utils/appconst";
 import { ILoadState } from "../../utils/loading.utils.";
-import { mockTableData } from "../../utils/mock.data";
 import "./Dashboard-Comp.css";
 
 type NotificationType = "success" | "info" | "warning" | "error";
@@ -101,7 +100,7 @@ export const UrlList: React.FC<IUrlList> = ({
 
   // Custom hook to load all URL item details
   const urlItemDataResult = useFormatApiRequest(
-    () => sampleApiCall(urlItemDefaultFilter),
+    () => getUrl(),
     loadurlItemData,
     () => {
       setLoadUrlItemData(false);
@@ -114,7 +113,7 @@ export const UrlList: React.FC<IUrlList> = ({
   // Process the current URL item data result
   const processurlItemResult = async () => {
     if (urlItemDataResult.httpState === "SUCCESS") {
-      setTableData(urlItemDataResult.data?.data || mockTableData);
+      setTableData(urlItemDataResult.data?.data);
       setUrlItemLoadState("completed");
       setTotalItems(urlItemDataResult.data?.meta?.total || 1);
     } else if (urlItemDataResult.httpState === "ERROR") {
