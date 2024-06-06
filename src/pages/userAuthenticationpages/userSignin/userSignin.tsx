@@ -1,4 +1,4 @@
-import { LoadingOutlined, LockOutlined, MailOutlined } from "@ant-design/icons";
+import { LoadingOutlined, MailOutlined } from "@ant-design/icons";
 import { notification } from "antd";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -7,9 +7,30 @@ import { IAuthType } from "../../../apiservice/authService.type";
 import CustomInput from "../../../components/Sharedcomponents/InputBtn/Input-Field";
 import PasswordInput from "../../../components/Sharedcomponents/PasswordBtn/Password-input";
 import useFormatApiRequest from "../../../hooks/formatApiRequest";
+import { USER_TOKEN_KEY, USER_AUTH_DATA_KEY } from "../../../hooks/useAuth";
 import { useAppDispatch } from "../../../Redux/reduxCustomHook";
+import { storePlainString, storeJSON } from "../../../utils/localStorage";
 import { NotificationType } from "../../../utils/mscType.type";
 import "../userAuth.css";
+
+const mockSigninResult = {
+  message: "User authenticated successfully",
+  data: {
+    status: 200,
+    token: "abcdef1234567890",
+    credentials: {
+      userId: 101,
+      email: "johndoe@example.com",
+      emailVerified: true,
+      username: "johndoe",
+      firstName: "John",
+      lastName: "Doe",
+      fullName: "John Doe",
+      dpUrl: "https://example.com/images/johndoe.jpg",
+      phoneNumber: "+1234567890",
+    },
+  },
+};
 
 const UserSignin = () => {
   const [formLoading, setFormLoading] = useState<boolean>(false);
@@ -50,14 +71,13 @@ const UserSignin = () => {
   const processApi = async () => {
     if (result.httpState === "SUCCESS") {
       setFormLoading(false);
-      const signinResult: IAuthType = result.data;
-      // storePlainString(USER_TOKEN_KEY, signinResult?.data?.token || "");
-      // storeJSON(USER_AUTH_DATA_KEY, signinResult);
-      // dispatch({ type: "AUTH_ADD_DATA", payload: signinResult });
-
+      const signinResult: IAuthType = mockSigninResult || result.data;
+      storePlainString(USER_TOKEN_KEY, signinResult?.data?.token || "");
+      storeJSON(USER_AUTH_DATA_KEY, signinResult);
+      dispatch({ type: "AUTH_ADD_DATA", payload: signinResult });
       setTimeout(() => {
         // Handle Success Here
-        navigate("/users/home");
+        navigate("/dashboard");
       }, 1500);
       openNotificationWithIcon("info", "", "Login Success", "#D9FFB5");
 

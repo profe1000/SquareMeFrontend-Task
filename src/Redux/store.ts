@@ -1,8 +1,12 @@
 import { createStore, combineReducers, applyMiddleware, Action } from "redux";
 import { composeWithDevTools } from "redux-devtools-extension";
 import thunk, { ThunkAction } from "redux-thunk";
+import { AuthDataReducer, URLLoadStateReducer } from "./reducers/reducers";
 
-const reducer = combineReducers({});
+const reducer = combineReducers({
+  AuthData: AuthDataReducer,
+  UrlTableLoadState: URLLoadStateReducer,
+});
 
 const initialState = {};
 const middleware = [thunk]; //there can be multiple middlewares here

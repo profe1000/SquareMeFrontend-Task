@@ -1,19 +1,11 @@
-import {
-  LoadingOutlined,
-  LockOutlined,
-  MailOutlined,
-  PhoneOutlined,
-  UserOutlined,
-} from "@ant-design/icons";
+import { LoadingOutlined, MailOutlined } from "@ant-design/icons";
 import { notification } from "antd";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { sampleApiCall } from "../../../apiservice/authService";
-import { IAuthType } from "../../../apiservice/authService.type";
 import CustomInput from "../../../components/Sharedcomponents/InputBtn/Input-Field";
 import PasswordInput from "../../../components/Sharedcomponents/PasswordBtn/Password-input";
 import useFormatApiRequest from "../../../hooks/formatApiRequest";
-import { useAppDispatch } from "../../../Redux/reduxCustomHook";
 import { NotificationType } from "../../../utils/mscType.type";
 import "../userAuth.css";
 
@@ -24,9 +16,8 @@ const UserSignUp = () => {
   const [api, contextHolder] = notification.useNotification();
 
   const navigate = useNavigate();
-  const dispatch = useAppDispatch();
 
-  // Use to collect Site Description Change
+  // Use to Handle Input Change
   const handleInputChange = (event: any) => {
     const name = event.target.name;
     const value = event.target.value;
@@ -56,13 +47,8 @@ const UserSignUp = () => {
   const processApi = async () => {
     if (result.httpState === "SUCCESS") {
       setFormLoading(false);
-      const signinResult: IAuthType = result.data;
-      // storePlainString(USER_TOKEN_KEY, signinResult?.data?.token || "");
-      // storeJSON(USER_AUTH_DATA_KEY, signinResult);
-      // dispatch({ type: "AUTH_ADD_DATA", payload: signinResult });
-
       setTimeout(() => {
-        navigate("/users/home");
+        navigate("/");
       }, 1500);
       openNotificationWithIcon(
         "info",

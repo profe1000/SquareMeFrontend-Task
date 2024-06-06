@@ -1,7 +1,7 @@
-import { LoadingOutlined, MailOutlined } from "@ant-design/icons";
+import { LoadingOutlined } from "@ant-design/icons";
 import { notification } from "antd";
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { sampleApiCall } from "../../apiservice/authService";
 import { IAuthType } from "../../apiservice/authService.type";
 import useFormatApiRequest from "../../hooks/formatApiRequest";
@@ -9,7 +9,6 @@ import { useAppDispatch } from "../../Redux/reduxCustomHook";
 import { NotificationType } from "../../utils/mscType.type";
 import CustomInput from "../Sharedcomponents/InputBtn/Input-Field";
 import CustomInputLink from "../Sharedcomponents/InputBtn/Input-Field-url";
-import PasswordInput from "../Sharedcomponents/PasswordBtn/Password-input";
 import "./Dashboard-Comp.css";
 
 const DashbaordForm = () => {
@@ -51,18 +50,11 @@ const DashbaordForm = () => {
   const processApi = async () => {
     if (result.httpState === "SUCCESS") {
       setFormLoading(false);
-      const signinResult: IAuthType = result.data;
-      // storePlainString(USER_TOKEN_KEY, signinResult?.data?.token || "");
-      // storeJSON(USER_AUTH_DATA_KEY, signinResult);
-      // dispatch({ type: "AUTH_ADD_DATA", payload: signinResult });
-
-      setTimeout(() => {
-        navigate("/users/home");
-      }, 1500);
+      dispatch({ type: "CHANGE_URL_LOAD_STATE", payload: true });
       openNotificationWithIcon(
         "info",
         "",
-        "Your Account Have being created",
+        "Your Link Have Been Created",
         "#D9FFB5"
       );
 

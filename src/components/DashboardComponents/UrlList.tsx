@@ -1,14 +1,14 @@
-import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
-import { Button, Empty, notification, Pagination, Result, Spin } from "antd";
+import { ArrowLeftOutlined, ArrowRightOutlined } from "@ant-design/icons";
+import { Button, Modal, notification, Pagination, Result } from "antd";
 import Table, { ColumnsType } from "antd/es/table";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { sampleApiCall } from "../../apiservice/authService";
 import useFormatApiRequest from "../../hooks/formatApiRequest";
-import { useAppDispatch } from "../../Redux/reduxCustomHook";
+import { useAppDispatch, useAppSelector } from "../../Redux/reduxCustomHook";
+import { RootState } from "../../Redux/store";
+import { appZIndex } from "../../utils/appconst";
 import { ILoadState } from "../../utils/loading.utils.";
 import "./Dashboard-Comp.css";
-
 type NotificationType = "success" | "info" | "warning" | "error";
 
 type IUrlList = {
@@ -30,15 +30,58 @@ export const UrlList: React.FC<IUrlList> = ({
   );
   const [tableData, setTableData] = useState<any[]>([]);
   const [api, contextHolder] = notification.useNotification();
+  const [link, setLink] = useState<string>(
+    "eeaefwu53798lef90plhefipgepiwefpweipwefigppi"
+  );
 
   // Pagination Constant/Variables
   const [currentPage, setCurrentPage] = useState(1);
   const [totalItems, setTotalItems] = useState(1);
   const perPage = 10;
 
+  const [showModal, setShowModal] = useState<boolean>(false);
+
   // For Navigator/Redux
   const dispatch = useAppDispatch();
-  const navigate = useNavigate();
+  const tableLoadState: boolean = useAppSelector(
+    (state: RootState) => state?.UrlTableLoadState
+  );
+
+  const handleShowModal = (index) => {
+    setShowModal(true);
+    setLink("eeaefwu53798lef90plhefipgepiwefpweipwefigppi");
+  };
+
+  const handleCancelModal = () => {
+    setShowModal(false);
+  };
+
+  const handleCopyClick = async () => {
+    try {
+      await navigator.clipboard.writeText(link);
+      openNotificationWithIcon(
+        "info",
+        "",
+        "Link Copied To Clip Board",
+        "#D9FFB5"
+      );
+    } catch (err) {
+      console.error("Unable to copy to clipboard.", err);
+      alert("Copy to clipboard failed.");
+    }
+  };
+
+  // Use Effect to reload API when Table Load State Changed in Redux
+  useEffect(() => {
+    if (tableLoadState) {
+      dispatch({
+        type: "CHANGE_URL_LOAD_STATE",
+        payload: false,
+      });
+      setLoadUrlItemData(true);
+      setUrlItemLoadState("loading");
+    }
+  }, [tableLoadState]);
 
   // Use Effect to reload API when External Filter has changed
   useEffect(() => {
@@ -120,7 +163,40 @@ export const UrlList: React.FC<IUrlList> = ({
       dataIndex: "action",
       key: "action",
       render: (text, records, index) => (
-        <p>
+        <p
+          onClick={() => {
+            handleShowModal(index);
+          }}
+        >
+          <img
+            style={{ width: "16px" }}
+            src={`${process.env.PUBLIC_URL + "/images/dashboard/copy.svg "}`}
+            alt="_img"
+          />
+        </p>
+      ),
+    },
+  ];
+
+  const columnsSM: ColumnsType<any> = [
+    {
+      title: "Shorten URL",
+      dataIndex: "shortenUrl",
+      key: "shortenUrl",
+      render: (text, records, index) => (
+        <p className="pt-4 pb-4">{"James Manager"}</p>
+      ),
+    },
+    {
+      title: "",
+      dataIndex: "action",
+      key: "action",
+      render: (text, records, index) => (
+        <p
+          onClick={() => {
+            handleShowModal(index);
+          }}
+        >
           <img
             style={{ width: "16px" }}
             src={`${process.env.PUBLIC_URL + "/images/dashboard/copy.svg "}`}
@@ -147,15 +223,8 @@ export const UrlList: React.FC<IUrlList> = ({
       {/* " The context is use to hold the notification from ant design" */}
       {contextHolder}
       <div className="grid pt-4">
-        {/* " Show Loading Indicator" */}
-        {/* {urlItemLoadState === "loading" && (
-          <div className="mt-2 mb-2 flex justify-center items-center pt-20 pb-20">
-            <Spin size="large" />
-          </div>
-        )} */}
-
         {/* " Show Loading Error" */}
-        {/* {urlItemLoadState === "error" && (
+        {urlItemLoadState === "error" && (
           <div className="mt-2 mb-2">
             <Result
               status="500"
@@ -173,22 +242,17 @@ export const UrlList: React.FC<IUrlList> = ({
               }
             />
           </div>
-        )} */}
-
-        {/* " Show No data" */}
-        {/* {urlItemLoadState === "noData" && (
-          <div className="mt-2">
-            <Empty></Empty>
-          </div>
-        )} */}
+        )}
 
         {/* " Show Data " */}
-        {urlItemLoadState !== "notLoading" && (
+        {urlItemLoadState !== "error" && (
           <div className="mt-2">
             <div>
               {/* UrlItem */}
               <div className="grid shadow rounded-lg">
+                {/* Table to shows at large screen */}
                 <Table
+                  className="hidden md:grid"
                   loading={urlItemLoadState === "loading"}
                   rowKey="id"
                   size="small"
@@ -197,14 +261,44 @@ export const UrlList: React.FC<IUrlList> = ({
                   pagination={{ hideOnSinglePage: true }}
                 />
 
+                {/* Table to shows at small screen */}
+                <Table
+                  className="grid md:hidden"
+                  loading={urlItemLoadState === "loading"}
+                  rowKey="id"
+                  size="small"
+                  columns={columnsSM}
+                  dataSource={tableData}
+                  pagination={{ hideOnSinglePage: true }}
+                />
+
                 {!hidePagination && (
-                  <div className="grid mt-2 mb-2">
-                    <Pagination
-                      current={currentPage || 1}
-                      onChange={onPageChange}
-                      pageSize={perPage}
-                      total={totalItems}
-                    />
+                  <div className="grid pt-2 pb-2 bg-white rounded-lg">
+                    <div className="flex px-2 py-2">
+                      <div className="flex items-center justify-start">
+                        <button className="flex items-center w-full h-10 px-2 py-2  font-sans border  text-gray-500 rounded-xl text-lg">
+                          <span className="text-sm font-semibold font-sans">
+                            <ArrowLeftOutlined /> Previous
+                          </span>
+                        </button>
+                      </div>
+                      <div className="flex grow items-center justify-center">
+                        <Pagination
+                          current={currentPage || 1}
+                          onChange={onPageChange}
+                          pageSize={perPage}
+                          total={totalItems}
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-end">
+                        <button className="flex items-center  w-full h-10 px-2 py-2  font-sans border  text-gray-500 rounded-xl text-lg">
+                          <span className="text-sm font-semibold font-sans">
+                            Next <ArrowRightOutlined />
+                          </span>
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
@@ -213,6 +307,69 @@ export const UrlList: React.FC<IUrlList> = ({
           </div>
         )}
       </div>
+
+      {/* Modal */}
+      <Modal
+        zIndex={appZIndex.modal}
+        open={showModal}
+        title={
+          <>
+            <img
+              style={{ width: "48px" }}
+              src={`${
+                process.env.PUBLIC_URL + "/images/dashboard/copy_2.svg "
+              }`}
+              alt="_img"
+            />
+          </>
+        }
+        onCancel={handleCancelModal}
+        width={600}
+        footer={[<p style={{ minHeight: "00px" }}></p>]}
+      >
+        <div style={{ maxHeight: "300px", overflow: "scroll" }}>
+          <div className="grid mt-4">
+            <h1 className="font-semibold text-lg"> View Full URL </h1>
+            <p className="mt-6 text-sm"> Share Link</p>
+
+            <div className="flex mt-2">
+              <div className="grow">
+                <input
+                  readOnly
+                  value={"eeaefwu53798lef90plhefipgepiwefpweipwefigppi"}
+                  className="w-full border h-12 rounded-lg text-sm px-2 py-2"
+                />
+              </div>
+              <div className="w-12 flex items-center justify-center">
+                <img
+                  onClick={handleCopyClick}
+                  style={{ width: "32px" }}
+                  src={`${
+                    process.env.PUBLIC_URL + "/images/dashboard/copy_3.svg "
+                  }`}
+                  alt="_img"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 mt-8 md:grid-cols-2">
+            <div>
+              <button
+                onClick={handleCancelModal}
+                className="w-full h-12  font-sans border  text-gray-500 rounded-xl text-lg"
+              >
+                <span className="text-sm font-semibold font-sans">Cancel</span>
+              </button>
+            </div>
+            <div>
+              <button className="w-full h-12  font-sans bg-blue-900 text-white rounded-xl text-lg">
+                <span className="text-sm font-semibold font-sans">Done</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </Modal>
     </>
   );
 };
