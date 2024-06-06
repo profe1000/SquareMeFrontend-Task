@@ -1,63 +1,57 @@
 import { LoadingOutlined, MailOutlined } from "@ant-design/icons";
 import { notification } from "antd";
-import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { sampleApiCall } from "../../../apiservice/authService";
+import { authSignIn, sampleApiCall } from "../../../apiservice/authService";
 import { IAuthType } from "../../../apiservice/authService.type";
 import CustomInput from "../../../components/Sharedcomponents/InputBtn/Input-Field";
 import PasswordInput from "../../../components/Sharedcomponents/PasswordBtn/Password-input";
 import useFormatApiRequest from "../../../hooks/formatApiRequest";
-import { USER_TOKEN_KEY, USER_AUTH_DATA_KEY } from "../../../hooks/useAuth";
 import { useAppDispatch } from "../../../Redux/reduxCustomHook";
 import { storePlainString, storeJSON } from "../../../utils/localStorage";
 import { NotificationType } from "../../../utils/mscType.type";
+import * as yup from "yup";
+import { useFormik } from "formik";
 import "../userAuth.css";
-
-const mockSigninResult = {
-  message: "User authenticated successfully",
-  data: {
-    status: 200,
-    token: "abcdef1234567890",
-    credentials: {
-      userId: 101,
-      email: "johndoe@example.com",
-      emailVerified: true,
-      username: "johndoe",
-      firstName: "John",
-      lastName: "Doe",
-      fullName: "John Doe",
-      dpUrl: "https://example.com/images/johndoe.jpg",
-      phoneNumber: "+1234567890",
-    },
-  },
-};
+import { useState } from "react";
+import { USER_TOKEN_KEY, USER_AUTH_DATA_KEY } from "../../../hooks/useAuth";
+import { mockSigninResult } from "../../../utils/mock.data";
 
 const UserSignin = () => {
   const [formLoading, setFormLoading] = useState<boolean>(false);
   const [loadApi, setLoadApi] = useState(false);
-  const [user, setUser] = useState<any>({});
   const [api, contextHolder] = notification.useNotification();
-
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
-  // Use to collect Site Description Change
-  const handleInputChange = (event: any) => {
-    const name = event.target.name;
-    const value = event.target.value;
-    setUser((values: any) => ({ ...values, [name]: value }));
-  };
+  // Yup validation schema
+  const validationSchema = yup.object().shape({
+    email: yup.string().email("Invalid email").required("Email is required"),
+    password: yup
+      .string()
+      .required("Password is required")
+      .min(8, "Password must be at least 8 characters")
+      .matches(
+        /^(?=.*[!@#$%^&*()_+}{":;'?\/\\.,><|])\S*$/,
+        "Password must contain at least one special character"
+      ),
+  });
 
-  // Use to Submit Form
-  const handleSubmit = (event: any) => {
-    event.preventDefault();
-    setLoadApi(true);
-    setFormLoading(true);
-  };
+  // Formik initialization
+  const formik = useFormik({
+    initialValues: {
+      email: "",
+      password: "",
+    },
+    validationSchema,
+    onSubmit: (values) => {
+      setLoadApi(true);
+      setFormLoading(true);
+    },
+  });
 
-  // A custom hook to format the login Api
+  // Custom hook to format the API call
   const result = useFormatApiRequest(
-    () => sampleApiCall(user),
+    () => sampleApiCall(formik.values),
     loadApi,
     () => {
       setLoadApi(false);
@@ -67,7 +61,7 @@ const UserSignin = () => {
     }
   );
 
-  // Process Api
+  // Process API result
   const processApi = async () => {
     if (result.httpState === "SUCCESS") {
       setFormLoading(false);
@@ -96,7 +90,7 @@ const UserSignin = () => {
     }
   };
 
-  // Show Notification
+  // Show notification
   const openNotificationWithIcon = (
     type: NotificationType,
     message: string,
@@ -113,15 +107,15 @@ const UserSignin = () => {
 
   return (
     <>
-      {/* " The context is use to hold the notification from ant design" */}
+      {/* The context is used to hold the notification from ant design */}
       {contextHolder}
 
-      {/* "Main Desgin" */}
+      {/* Main Design */}
       <div className="grid bg-stone-100 min-h-[100vh]">
-        {/* "Login Card" */}
+        {/* Login Card */}
         <div className="w-[95%] max-w-[500px] m-auto border mt-20 mb-20 rounded-lg bg-white">
           <div className="grid p-8">
-            {/* "Header Text" */}
+            {/* Header Text */}
             <div className="mb-6 flex flex-col justify-center items-center">
               <p className="font-semibold font-sans text-2xl"> Log In </p>
               <p className="font-sans text-md text-gray-500">
@@ -129,7 +123,7 @@ const UserSignin = () => {
               </p>
             </div>
 
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={formik.handleSubmit}>
               {/* Email Address */}
               <div className="mb-6">
                 <label className="font-sans text-sm font-semibold">
@@ -138,12 +132,16 @@ const UserSignin = () => {
                 <CustomInput
                   required
                   name="email"
-                  value={user?.email}
-                  onChange={handleInputChange}
+                  value={formik.values.email}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
                   type="email"
                   placeholder="Email Address"
                   icon={<MailOutlined />}
                 ></CustomInput>
+                {formik.touched.email && formik.errors.email ? (
+                  <div className="text-red-600">{formik.errors.email}</div>
+                ) : null}
               </div>
 
               {/* Password */}
@@ -154,15 +152,23 @@ const UserSignin = () => {
                 <PasswordInput
                   required
                   name="password"
-                  value={user?.password}
-                  onChange={handleInputChange}
+                  value={formik.values.password}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
                   placeholder="Enter Password"
                 ></PasswordInput>
+                {formik.touched.password && formik.errors.password ? (
+                  <div className="text-red-600">{formik.errors.password}</div>
+                ) : null}
               </div>
 
               {/* Login Button */}
               <div className="mb-8">
-                <button className="w-full h-14  font-sans bg-blue-900 text-white rounded-xl text-lg">
+                <button
+                  className="w-full h-14  font-sans bg-blue-900 text-white rounded-xl text-lg"
+                  type="submit"
+                  disabled={formLoading}
+                >
                   {!formLoading ? (
                     <span className="text-sm font-semibold font-sans">
                       Log Into Account

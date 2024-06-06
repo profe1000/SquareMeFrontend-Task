@@ -3,12 +3,15 @@ import { Button, Modal, notification, Pagination, Result } from "antd";
 import Table, { ColumnsType } from "antd/es/table";
 import { useEffect, useState } from "react";
 import { sampleApiCall } from "../../apiservice/authService";
+import { IURLData } from "../../apiservice/dashboardService.type ";
 import useFormatApiRequest from "../../hooks/formatApiRequest";
 import { useAppDispatch, useAppSelector } from "../../Redux/reduxCustomHook";
 import { RootState } from "../../Redux/store";
 import { appZIndex } from "../../utils/appconst";
 import { ILoadState } from "../../utils/loading.utils.";
+import { mockTableData } from "../../utils/mock.data";
 import "./Dashboard-Comp.css";
+
 type NotificationType = "success" | "info" | "warning" | "error";
 
 type IUrlList = {
@@ -28,34 +31,35 @@ export const UrlList: React.FC<IUrlList> = ({
   const [urlItemDefaultFilter, setUrlItemDefaultFilter] = useState(
     initialDefaultFilter || {}
   );
-  const [tableData, setTableData] = useState<any[]>([]);
+  const [tableData, setTableData] = useState<IURLData[]>([]);
   const [api, contextHolder] = notification.useNotification();
-  const [link, setLink] = useState<string>(
-    "eeaefwu53798lef90plhefipgepiwefpweipwefigppi"
-  );
+  const [link, setLink] = useState<string>("");
 
-  // Pagination Constant/Variables
+  // Pagination constants/variables
   const [currentPage, setCurrentPage] = useState(1);
   const [totalItems, setTotalItems] = useState(1);
   const perPage = 10;
 
   const [showModal, setShowModal] = useState<boolean>(false);
 
-  // For Navigator/Redux
+  // For Redux
   const dispatch = useAppDispatch();
   const tableLoadState: boolean = useAppSelector(
     (state: RootState) => state?.UrlTableLoadState
   );
 
+  // Handle showing the modal with the shortened URL
   const handleShowModal = (index) => {
     setShowModal(true);
-    setLink("eeaefwu53798lef90plhefipgepiwefpweipwefigppi");
+    setLink(tableData[index].shortened_url);
   };
 
+  // Handle hiding the modal
   const handleCancelModal = () => {
     setShowModal(false);
   };
 
+  // Handle copying the shortened URL to the clipboard
   const handleCopyClick = async () => {
     try {
       await navigator.clipboard.writeText(link);
@@ -71,7 +75,7 @@ export const UrlList: React.FC<IUrlList> = ({
     }
   };
 
-  // Use Effect to reload API when Table Load State Changed in Redux
+  // Use Effect to reload API when Table Load State changes in Redux
   useEffect(() => {
     if (tableLoadState) {
       dispatch({
@@ -83,7 +87,7 @@ export const UrlList: React.FC<IUrlList> = ({
     }
   }, [tableLoadState]);
 
-  // Use Effect to reload API when External Filter has changed
+  // Use Effect to reload API when External Filter changes
   useEffect(() => {
     if (externalFilter) {
       setUrlItemDefaultFilter({
@@ -95,7 +99,7 @@ export const UrlList: React.FC<IUrlList> = ({
     }
   }, [externalFilter]);
 
-  // A custom hook to Load All urlItem Details
+  // Custom hook to load all URL item details
   const urlItemDataResult = useFormatApiRequest(
     () => sampleApiCall(urlItemDefaultFilter),
     loadurlItemData,
@@ -107,10 +111,10 @@ export const UrlList: React.FC<IUrlList> = ({
     }
   );
 
-  // Process The Current UrlItem Data Result
+  // Process the current URL item data result
   const processurlItemResult = async () => {
     if (urlItemDataResult.httpState === "SUCCESS") {
-      setTableData(urlItemDataResult.data?.data || [{}, {}, {}]);
+      setTableData(urlItemDataResult.data?.data || mockTableData);
       setUrlItemLoadState("completed");
       setTotalItems(urlItemDataResult.data?.meta?.total || 1);
     } else if (urlItemDataResult.httpState === "ERROR") {
@@ -120,7 +124,7 @@ export const UrlList: React.FC<IUrlList> = ({
     }
   };
 
-  // Show Notification
+  // Show notification
   const openNotificationWithIcon = (
     type: NotificationType,
     message: string,
@@ -135,28 +139,25 @@ export const UrlList: React.FC<IUrlList> = ({
     });
   };
 
-  // Table Configuration
-  const columns: ColumnsType<any> = [
+  // Table configuration
+  const columns: ColumnsType<IURLData> = [
     {
       title: "Name",
-      dataIndex: "applicantName",
-      key: "applicantName",
-      render: (text, records, index) => (
-        <p className="pt-4 pb-4">{"James Manager"}</p>
-      ),
+      dataIndex: "name",
+      key: "name",
+      render: (text, records, index) => <p className="pt-4 pb-4">{text}</p>,
     },
     {
       title: "Description",
       dataIndex: "description",
       key: "description",
-      render: (text, records, index) => <p>{"James Manager"}</p>,
+      render: (text, records, index) => <p>{text}</p>,
     },
-
     {
       title: "Shorten URL",
-      dataIndex: "shortenUrl",
-      key: "shortenUrl",
-      render: (text, records, index) => <p>{"James Manager"}</p>,
+      dataIndex: "shortened_url",
+      key: "shortened_url",
+      render: (text, records, index) => <p>{text}</p>,
     },
     {
       title: "",
@@ -170,7 +171,7 @@ export const UrlList: React.FC<IUrlList> = ({
         >
           <img
             style={{ width: "16px" }}
-            src={`${process.env.PUBLIC_URL + "/images/dashboard/copy.svg "}`}
+            src={`${process.env.PUBLIC_URL + "/images/dashboard/copy.svg"}`}
             alt="_img"
           />
         </p>
@@ -178,14 +179,12 @@ export const UrlList: React.FC<IUrlList> = ({
     },
   ];
 
-  const columnsSM: ColumnsType<any> = [
+  const columnsSM: ColumnsType<IURLData> = [
     {
       title: "Shorten URL",
-      dataIndex: "shortenUrl",
-      key: "shortenUrl",
-      render: (text, records, index) => (
-        <p className="pt-4 pb-4">{"James Manager"}</p>
-      ),
+      dataIndex: "shortened_url",
+      key: "shortened_url",
+      render: (text, records, index) => <p className="pt-4 pb-4">{text}</p>,
     },
     {
       title: "",
@@ -199,7 +198,7 @@ export const UrlList: React.FC<IUrlList> = ({
         >
           <img
             style={{ width: "16px" }}
-            src={`${process.env.PUBLIC_URL + "/images/dashboard/copy.svg "}`}
+            src={`${process.env.PUBLIC_URL + "/images/dashboard/copy.svg"}`}
             alt="_img"
           />
         </p>
@@ -207,7 +206,7 @@ export const UrlList: React.FC<IUrlList> = ({
     },
   ];
 
-  // Use to Control Pagination On Change Event
+  // Handle pagination change
   const onPageChange = (page: number, pageSize: number) => {
     setCurrentPage(page);
     setUrlItemDefaultFilter({
@@ -220,10 +219,10 @@ export const UrlList: React.FC<IUrlList> = ({
 
   return (
     <>
-      {/* " The context is use to hold the notification from ant design" */}
+      {/* The context is used to hold the notification from ant design */}
       {contextHolder}
       <div className="grid pt-4">
-        {/* " Show Loading Error" */}
+        {/* Show loading error */}
         {urlItemLoadState === "error" && (
           <div className="mt-2 mb-2">
             <Result
@@ -231,7 +230,7 @@ export const UrlList: React.FC<IUrlList> = ({
               title={<span className="">Error</span>}
               subTitle={
                 <span className="">
-                  Sorry, something went wrong, it could be a network Related
+                  Sorry, something went wrong, it could be a network related
                   error
                 </span>
               }
@@ -244,13 +243,13 @@ export const UrlList: React.FC<IUrlList> = ({
           </div>
         )}
 
-        {/* " Show Data " */}
+        {/* Show data */}
         {urlItemLoadState !== "error" && (
           <div className="mt-2">
             <div>
-              {/* UrlItem */}
+              {/* URL Item */}
               <div className="grid shadow rounded-lg">
-                {/* Table to shows at large screen */}
+                {/* Table to show on large screens */}
                 <Table
                   className="hidden md:grid"
                   loading={urlItemLoadState === "loading"}
@@ -261,7 +260,7 @@ export const UrlList: React.FC<IUrlList> = ({
                   pagination={{ hideOnSinglePage: true }}
                 />
 
-                {/* Table to shows at small screen */}
+                {/* Table to show on small screens */}
                 <Table
                   className="grid md:hidden"
                   loading={urlItemLoadState === "loading"}
@@ -272,11 +271,12 @@ export const UrlList: React.FC<IUrlList> = ({
                   pagination={{ hideOnSinglePage: true }}
                 />
 
+                {/* Pagination controls */}
                 {!hidePagination && (
                   <div className="grid pt-2 pb-2 bg-white rounded-lg">
                     <div className="flex px-2 py-2">
                       <div className="flex items-center justify-start">
-                        <button className="flex items-center w-full h-10 px-2 py-2  font-sans border  text-gray-500 rounded-xl text-lg">
+                        <button className="flex items-center w-full h-10 px-2 py-2 font-sans border text-gray-500 rounded-xl text-lg">
                           <span className="text-sm font-semibold font-sans">
                             <ArrowLeftOutlined /> Previous
                           </span>
@@ -290,9 +290,8 @@ export const UrlList: React.FC<IUrlList> = ({
                           total={totalItems}
                         />
                       </div>
-
                       <div className="flex items-center justify-end">
-                        <button className="flex items-center  w-full h-10 px-2 py-2  font-sans border  text-gray-500 rounded-xl text-lg">
+                        <button className="flex items-center w-full h-10 px-2 py-2 font-sans border text-gray-500 rounded-xl text-lg">
                           <span className="text-sm font-semibold font-sans">
                             Next <ArrowRightOutlined />
                           </span>
@@ -302,13 +301,13 @@ export const UrlList: React.FC<IUrlList> = ({
                   </div>
                 )}
               </div>
-              {/* End UrlItem */}
+              {/* End URL Item */}
             </div>
           </div>
         )}
       </div>
 
-      {/* Modal */}
+      {/* Modal for showing the full URL */}
       <Modal
         zIndex={appZIndex.modal}
         open={showModal}
@@ -316,9 +315,7 @@ export const UrlList: React.FC<IUrlList> = ({
           <>
             <img
               style={{ width: "48px" }}
-              src={`${
-                process.env.PUBLIC_URL + "/images/dashboard/copy_2.svg "
-              }`}
+              src={`${process.env.PUBLIC_URL + "/images/dashboard/copy_2.svg"}`}
               alt="_img"
             />
           </>
@@ -331,12 +328,11 @@ export const UrlList: React.FC<IUrlList> = ({
           <div className="grid mt-4">
             <h1 className="font-semibold text-lg"> View Full URL </h1>
             <p className="mt-6 text-sm"> Share Link</p>
-
             <div className="flex mt-2">
               <div className="grow">
                 <input
                   readOnly
-                  value={"eeaefwu53798lef90plhefipgepiwefpweipwefigppi"}
+                  value={link}
                   className="w-full border h-12 rounded-lg text-sm px-2 py-2"
                 />
               </div>
@@ -345,7 +341,7 @@ export const UrlList: React.FC<IUrlList> = ({
                   onClick={handleCopyClick}
                   style={{ width: "32px" }}
                   src={`${
-                    process.env.PUBLIC_URL + "/images/dashboard/copy_3.svg "
+                    process.env.PUBLIC_URL + "/images/dashboard/copy_3.svg"
                   }`}
                   alt="_img"
                 />
@@ -357,13 +353,13 @@ export const UrlList: React.FC<IUrlList> = ({
             <div>
               <button
                 onClick={handleCancelModal}
-                className="w-full h-12  font-sans border  text-gray-500 rounded-xl text-lg"
+                className="w-full h-12 font-sans border text-gray-500 rounded-xl text-lg"
               >
                 <span className="text-sm font-semibold font-sans">Cancel</span>
               </button>
             </div>
             <div>
-              <button className="w-full h-12  font-sans bg-blue-900 text-white rounded-xl text-lg">
+              <button className="w-full h-12 font-sans bg-blue-900 text-white rounded-xl text-lg">
                 <span className="text-sm font-semibold font-sans">Done</span>
               </button>
             </div>

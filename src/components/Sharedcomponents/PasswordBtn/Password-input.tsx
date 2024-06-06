@@ -6,6 +6,7 @@ type IPasswordInput = {
   name?: string;
   testId?: string;
   placeholder?: string;
+  onBlur?;
   onChange?: React.ChangeEventHandler<HTMLInputElement>;
   value?: string | number | readonly string[] | undefined;
   required?: boolean;
@@ -26,6 +27,7 @@ const PasswordInput: React.FC<IPasswordInput> = (props: IPasswordInput) => {
           onChange={props?.onChange}
           type={togglePassword ? " text" : "password"}
           style={props.style}
+          onBlur={props.onBlur}
           className={`pr-10 py-2 border rounded-lg w-full  h-14 bg-white border-green text-sm pl-4 text-gray-500 ${props.className}`}
           placeholder={props?.placeholder}
         />

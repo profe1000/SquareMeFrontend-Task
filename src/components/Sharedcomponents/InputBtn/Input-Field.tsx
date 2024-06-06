@@ -7,6 +7,7 @@ type ICustomInput = {
   name?: string;
   testId?: string;
   placeholder?: string;
+  onBlur?;
   onChange?: React.ChangeEventHandler<HTMLInputElement>;
   value?: string | number | readonly string[] | undefined;
   required?: boolean;
@@ -23,6 +24,7 @@ const CustomInput: React.FC<ICustomInput> = (props: ICustomInput) => {
           name={props.name}
           value={props.value}
           onChange={props.onChange}
+          onBlur={props.onBlur}
           type={props.type || "text"}
           style={props.style}
           className={`pl-4 py-2 border rounded-lg w-full  h-14 bg-white border-green text-sm text-gray-500 ${

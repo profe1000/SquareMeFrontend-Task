@@ -10,7 +10,7 @@ export const sampleApiCall = async (body?: any) => {
 
 export const authSignUp = async (body: any) => {
   const axios = await instance(null, null, true);
-  const { data } = await axios.post("api/v1/auth/signup", body);
+  const { data } = await axios.post("api/v1/auth/sign-up", body);
   const result: IAuthType = await data;
   return result;
 };

@@ -2,7 +2,9 @@ import { LoadingOutlined, MailOutlined } from "@ant-design/icons";
 import { notification } from "antd";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { sampleApiCall } from "../../../apiservice/authService";
+import { authSignUp, sampleApiCall } from "../../../apiservice/authService";
+import { useFormik } from "formik";
+import * as yup from "yup";
 import CustomInput from "../../../components/Sharedcomponents/InputBtn/Input-Field";
 import PasswordInput from "../../../components/Sharedcomponents/PasswordBtn/Password-input";
 import useFormatApiRequest from "../../../hooks/formatApiRequest";
@@ -12,28 +14,43 @@ import "../userAuth.css";
 const UserSignUp = () => {
   const [formLoading, setFormLoading] = useState<boolean>(false);
   const [loadApi, setLoadApi] = useState(false);
-  const [user, setUser] = useState<any>({});
   const [api, contextHolder] = notification.useNotification();
-
   const navigate = useNavigate();
 
-  // Use to Handle Input Change
-  const handleInputChange = (event: any) => {
-    const name = event.target.name;
-    const value = event.target.value;
-    setUser((values: any) => ({ ...values, [name]: value }));
-  };
+  // Validation schema
+  const validationSchema = yup.object().shape({
+    email: yup.string().email("Invalid email").required("Email is required"),
+    password: yup
+      .string()
+      .required("Password is required")
+      .min(8, "Password must be at least 8 characters")
+      .matches(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
+        "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character"
+      ),
+    confirmPassword: yup
+      .string()
+      .oneOf([yup.ref("password"),], "Passwords must match")
+      .required("Confirm Password is required"),
+  });
 
-  // Use to Submit Form
-  const handleSubmit = (event: any) => {
-    event.preventDefault();
-    setLoadApi(true);
-    setFormLoading(true);
-  };
+  // Formik initialization
+  const formik = useFormik({
+    initialValues: {
+      email: "",
+      password: "",
+      confirmPassword: "",
+    },
+    validationSchema,
+    onSubmit: (values) => {
+      setLoadApi(true);
+      setFormLoading(true);
+    },
+  });
 
-  // A custom hook to format the login Api
+  // A custom hook to format the signup API call
   const result = useFormatApiRequest(
-    () => sampleApiCall(user),
+    () => sampleApiCall(formik.values),
     loadApi,
     () => {
       setLoadApi(false);
@@ -43,7 +60,7 @@ const UserSignUp = () => {
     }
   );
 
-  // Process Api
+  // Process the API response
   const processApi = async () => {
     if (result.httpState === "SUCCESS") {
       setFormLoading(false);
@@ -53,20 +70,17 @@ const UserSignUp = () => {
       openNotificationWithIcon(
         "info",
         "",
-        "Your Account Have being created",
+        "Your Account Has Been Created",
         "#D9FFB5"
       );
-
-      // Handle Success Here
     } else if (result.httpState === "ERROR") {
       setFormLoading(false);
-      //Handle Error Here
       openNotificationWithIcon(
         "info",
         "",
         result.data?.response?.data?.message ||
           result.errorMsg ||
-          "Login Error",
+          "Signup Error",
         "#FFC2B7"
       );
     }
@@ -89,15 +103,10 @@ const UserSignUp = () => {
 
   return (
     <>
-      {/* " The context is use to hold the notification from ant design" */}
       {contextHolder}
-
-      {/* "Main Desgin" */}
       <div className="grid bg-stone-100 min-h-[100vh]">
-        {/* "Login Card" */}
         <div className="w-[95%] max-w-[500px] m-auto border mt-20 mb-20 rounded-lg bg-white">
           <div className="grid p-8">
-            {/* "Header Text" */}
             <div className="mb-6 flex flex-col justify-center items-center">
               <p className="font-semibold font-sans text-2xl">
                 Create an account
@@ -106,9 +115,7 @@ const UserSignUp = () => {
                 Enter your credentials to create your account
               </p>
             </div>
-
-            <form onSubmit={handleSubmit}>
-              {/* Email Address */}
+            <form onSubmit={formik.handleSubmit}>
               <div className="mb-6">
                 <label className="font-sans text-sm font-semibold">
                   EMAIL ADDRESS
@@ -116,15 +123,17 @@ const UserSignUp = () => {
                 <CustomInput
                   required
                   name="email"
-                  value={user?.email}
-                  onChange={handleInputChange}
+                  value={formik.values.email}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
                   type="email"
                   placeholder="Email Address"
                   icon={<MailOutlined />}
-                ></CustomInput>
+                />
+                {formik.touched.email && formik.errors.email ? (
+                  <div className="text-red-600">{formik.errors.email}</div>
+                ) : null}
               </div>
-
-              {/* Password */}
               <div className="mb-8">
                 <label className="font-sans text-sm font-semibold">
                   CREATE PASSWORD
@@ -132,13 +141,15 @@ const UserSignUp = () => {
                 <PasswordInput
                   required
                   name="password"
-                  value={user?.password}
-                  onChange={handleInputChange}
+                  value={formik.values.password}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
                   placeholder="Enter Password"
-                ></PasswordInput>
+                />
+                {formik.touched.password && formik.errors.password ? (
+                  <div className="text-red-600">{formik.errors.password}</div>
+                ) : null}
               </div>
-
-              {/* Confirm Password */}
               <div className="mb-8">
                 <label className="font-sans text-sm font-semibold">
                   CONFIRM PASSWORD
@@ -146,13 +157,18 @@ const UserSignUp = () => {
                 <PasswordInput
                   required
                   name="confirmPassword"
-                  value={user?.confirmPassword}
-                  onChange={handleInputChange}
-                  placeholder="Enter Password"
-                ></PasswordInput>
+                  value={formik.values.confirmPassword}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  placeholder="Confirm Password"
+                />
+                {formik.touched.confirmPassword &&
+                formik.errors.confirmPassword ? (
+                  <div className="text-red-600">
+                    {formik.errors.confirmPassword}
+                  </div>
+                ) : null}
               </div>
-
-              {/* Create Account  Button */}
               <div className="mb-8">
                 <button className="w-full h-14  font-sans bg-blue-900 text-white rounded-xl text-lg">
                   {!formLoading ? (
@@ -164,8 +180,6 @@ const UserSignUp = () => {
                   )}
                 </button>
               </div>
-
-              {/* Already Have Account Button */}
               <div className="mb-8 flex justify-center">
                 <span className="text-gray-500">Already have an account?</span>{" "}
                 &nbsp;
